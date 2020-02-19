@@ -1,0 +1,30 @@
+{
+  "executionRoleArn": "%ROLE_ARN%",
+  "requiresCompatibilities": ["EC2"],
+  "family": "%TASK_FAMILY%",
+  "containerDefinitions": [
+    {
+      "name": "%CONTAINER_NAME%",
+      "image": "%IMAGE_URI%",
+      "essential": true,
+      "cpu": 0,
+      "memoryReservation": %MEMORY_RESERVATION%,
+      "portMappings": [
+        {
+          "hostPort": 0,
+          "protocol": "tcp",
+          "containerPort": %PORT%
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "secretOptions": null,
+        "options": {
+          "awslogs-group": "%LOG_GROUP%",
+          "awslogs-region": "%REGION%",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

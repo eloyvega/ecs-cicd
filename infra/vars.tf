@@ -1,0 +1,10 @@
+variable "region" {}
+variable "app_name" {}
+variable "instance_type" {}
+variable "key_name" {}
+variable "cluster_min_size" {}
+variable "cluster_max_size" {}
+variable "cluster_size" {}
+variable "deployment_strategy" {}
+variable "dev_ecs_task" {}
+variable "prod_ecs_task" {}

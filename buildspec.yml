@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - apt-get update
+      - apt-get install -y jq
+  pre_build:
+    commands:
+      - $(aws ecr get-login --no-include-email --region $REGION)
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - docker build -t $ECR_URI:$IMAGE_TAG .
+  post_build:
+    commands:
+      - docker push $ECR_URI:$IMAGE_TAG
+      - echo File for dev deployment
+      - printf '[{"name":"%s","imageUri":"%s"}]' $DEV_CONTAINER $ECR_URI:$IMAGE_TAG > imagedefinitions.json
+      - echo Files for prod deployment
+      - sed -i -e "s|%ROLE_ARN%|$PROD_ROLE_ARN|g" taskdef.json
+      - sed -i -e "s|%TASK_FAMILY%|$PROD_TASK_FAMILY|g" taskdef.json
+      - sed -i -e "s|%CONTAINER_NAME%|$PROD_CONTAINER|g" taskdef.json
+      - sed -i -e "s|%IMAGE_URI%|$ECR_URI:$IMAGE_TAG|g" taskdef.json
+      - sed -i -e "s|%MEMORY_RESERVATION%|$PROD_MEMORY_RESERVATION|g" taskdef.json
+      - sed -i -e "s|%PORT%|$PROD_PORT|g" taskdef.json
+      - sed -i -e "s|%LOG_GROUP%|$PROD_LOG_GROUP|g" taskdef.json
+      - sed -i -e "s|%REGION%|$REGION|g" taskdef.json
+      - sed -i -e "s|%CONTAINER_NAME%|$PROD_CONTAINER|g" appspec.yaml
+      - sed -i -e "s|%CONTAINER_PORT%|$PROD_PORT|g" appspec.yaml
+artifacts:
+  files:
+    - imagedefinitions.json
+    - taskdef.json
+    - appspec.yaml
